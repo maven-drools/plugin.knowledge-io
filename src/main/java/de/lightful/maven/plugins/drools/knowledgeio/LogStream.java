@@ -17,7 +17,7 @@
  */
 package de.lightful.maven.plugins.drools.knowledgeio;
 
-public interface Logger<SELF_TYPE extends Logger<SELF_TYPE>> {
+public interface LogStream<SELF_TYPE extends LogStream<SELF_TYPE>> {
 
   SELF_TYPE log(String message);
 
