@@ -19,7 +19,9 @@ package de.lightful.maven.plugins.drools.knowledgeio;
 
 public interface LogStream<SELF_TYPE extends LogStream<SELF_TYPE>> {
 
-  SELF_TYPE log(String message);
+  String ROLE = "de.lightful.maven.plugins.drools.knowledgeio.LogStream";
+
+  SELF_TYPE write(String message);
 
   SELF_TYPE nl();
 }
