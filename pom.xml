@@ -27,7 +27,7 @@
 
   <groupId>de.lightful.maven.drools.plugin</groupId>
   <artifactId>knowledge-io</artifactId>
-  <version>0.1.2-SNAPSHOT</version>
+  <version>0.1.2</version>
 
   <name>Maven Drools Support :: Plugin :: Knowledge I/O Library</name>
 
@@ -64,7 +64,8 @@
     <dependency>
       <!-- "private" dependency, only used in implementation code -->
       <groupId>org.easytesting</groupId>
-      <artifactId>fest-assert</artifactId>
+      <artifactId>fest
+        -assert</artifactId>
       <scope>compile</scope>
     </dependency>
   </dependencies>
