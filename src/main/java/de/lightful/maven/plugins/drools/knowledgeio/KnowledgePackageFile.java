@@ -42,11 +42,15 @@ public class KnowledgePackageFile {
   }
 
   public Collection<KnowledgePackage> getKnowledgePackages() throws IOException, ClassNotFoundException {
-    return loadKnowledgePackagesFromFile();
+    return loadKnowledgePackagesFromFile(Thread.currentThread().getContextClassLoader());
   }
 
-  private Collection<KnowledgePackage> loadKnowledgePackagesFromFile() throws IOException, ClassNotFoundException {
-    Object streamedInObject = DroolsStreamUtils.streamIn(new FileInputStream(delegate));
+  public Collection<KnowledgePackage> getKnowledgePackages(ClassLoader classLoader) throws IOException, ClassNotFoundException {
+    return loadKnowledgePackagesFromFile(classLoader);
+  }
+
+  private Collection<KnowledgePackage> loadKnowledgePackagesFromFile(ClassLoader classLoader) throws IOException, ClassNotFoundException {
+    Object streamedInObject = DroolsStreamUtils.streamIn(new FileInputStream(delegate), classLoader);
     assertThat(streamedInObject).as("object read from stream").isNotNull().isInstanceOf(Collection.class);
 
     Collection loadedObjects = Collection.class.cast(streamedInObject);
