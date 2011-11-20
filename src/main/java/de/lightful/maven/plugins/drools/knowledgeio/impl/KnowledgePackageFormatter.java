@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.lightful.maven.plugins.drools.knowledgeio;
+package de.lightful.maven.plugins.drools.knowledgeio.impl;
 
 import org.drools.definition.KnowledgePackage;
 import org.drools.definitions.impl.KnowledgePackageImp;

@@ -16,7 +16,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.lightful.maven.plugins.drools.knowledgeio;
+package de.lightful.maven.plugins.drools.knowledgeio.impl;
 
 public interface LogStream<SELF_TYPE extends LogStream<SELF_TYPE>> {
 
