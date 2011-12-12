@@ -14,10 +14,28 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Collections;
 
+import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.bytes;
+import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.concat;
 import static org.fest.assertions.Assertions.assertThat;
 
 @Test
 public class KnowledgeModuleReaderImplTest {
+
+  public static final byte[] VALID_MAGIC = bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00);
+  public static final byte[] VALID_FILE_FORMAT_1 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
+  public static final byte[] FILE_FORMAT_TOO_SHORT_7 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
+  public static final byte[] FILE_FORMAT_TOO_SHORT_6 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
+  public static final byte[] DUMMY_DROOLS_VERSION = bytes(0x00, 0x01, 'X');
+
+  @Test
+  public void testFileFormatTooShort() {
+    assertThat(FILE_FORMAT_TOO_SHORT_6.length).isEqualTo(6);
+  }
+
+  @Test
+  public void testFileFormatNotSupported() {
+    assertThat(FILE_FORMAT_TOO_SHORT_7.length).isEqualTo(7);
+  }
 
   @Test(dataProvider = "getModuleWithIncompleteMagic")
   public void testReadFailsForIncompleteMagic(byte[] invalidInput) throws ClassNotFoundException, IOException {
@@ -38,10 +56,10 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleWithIncompleteMagic() {
     return new Object[][] {
-        {new byte[] {}},
-        {new byte[] {'A', 'B', 'C'}},
-        {new byte[] {'D', 'R', 'L'}},
-        {new byte[] {'D', 'R', 'L', 'K', 'M', 'O', 'D'}},
+        {bytes()},
+        {bytes('A', 'B', 'C')},
+        {bytes('D', 'R', 'L')},
+        {bytes('D', 'R', 'L', 'K', 'M', 'O', 'D')},
     };
   }
 
@@ -64,19 +82,9 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleWithInvalidFileFormatVersion() {
     return new Object[][] {
-        {new byte[] {'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00}},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-        }},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-        }},
+        {concat(VALID_MAGIC)},
+        {concat(VALID_MAGIC, FILE_FORMAT_TOO_SHORT_6)},
+        {concat(VALID_MAGIC, FILE_FORMAT_TOO_SHORT_7)},
     };
   }
 
@@ -99,30 +107,12 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleWithInvalidDroolsRuntimeVersion() {
     return new Object[][] {
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-            // drools runtime version:
-
-        }},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-            // drools runtime version: length = 1; data = [] => invalid
-            0x00, 0x01
-        }},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-            // drools runtime version: length = 10; data length = 9 => invalid
-            0x00, 0x0a, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'
-        }},
+        /* no length => invalid */
+        {concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes())},
+        /* length = 1; data = [] => invalid */
+        {concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x01))},
+        /* length = 10; data length = 9 => invalid */
+        {concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x0a, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'))},
     };
   }
 
@@ -149,73 +139,16 @@ public class KnowledgeModuleReaderImplTest {
   }
 
   @DataProvider
-  private Object[][] getModuleForFileFormatConversionTest
-      () {
+  private Object[][] getModuleForFileFormatConversionTest() {
     return new Object[][] {
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 1l},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 256l},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 65536l},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 16777216l},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 4294967296l},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 1099511627776l},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 281474976710656l},
-        {new byte[] {
-            // magic:
-            'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-            // file format version:
-            0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            // drools runtime version: length = 1; data length = 1
-            0x00, 0x01, 'X'
-        }, 72057594037927936l},
+        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01), DUMMY_DROOLS_VERSION), 1l},
+        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00), DUMMY_DROOLS_VERSION), 256l},
+        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00), DUMMY_DROOLS_VERSION), 65536l},
+        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 16777216l},
+        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 4294967296l},
+        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 1099511627776l},
+        {concat(VALID_MAGIC, bytes(0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 281474976710656l},
+        {concat(VALID_MAGIC, bytes(0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 72057594037927936l},
     };
   }
 
