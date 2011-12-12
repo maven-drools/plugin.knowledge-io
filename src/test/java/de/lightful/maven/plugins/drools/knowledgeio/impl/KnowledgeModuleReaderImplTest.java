@@ -12,20 +12,22 @@ import org.testng.annotations.Test;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.Collections;
 
 import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.bytes;
 import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.concat;
+import static java.util.Collections.singleton;
 import static org.fest.assertions.Assertions.assertThat;
 
 @Test
 public class KnowledgeModuleReaderImplTest {
 
   public static final byte[] VALID_MAGIC = bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00);
-  public static final byte[] VALID_FILE_FORMAT_1 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
   public static final byte[] FILE_FORMAT_TOO_SHORT_7 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
   public static final byte[] FILE_FORMAT_TOO_SHORT_6 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
+  public static final byte[] VALID_FILE_FORMAT_1 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
+  public static final byte[] VALID_FILE_FORMAT_2 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
   public static final byte[] DUMMY_DROOLS_VERSION = bytes(0x00, 0x01, 'X');
+  public static final byte[] DROOLS_5_1_1 = bytes(0, 5, '5', '.', '1', '.', '1');
 
   @Test
   public void testFileFormatTooShort() {
@@ -39,8 +41,7 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test(dataProvider = "getModuleWithIncompleteMagic")
   public void testReadFailsForIncompleteMagic(byte[] invalidInput) throws ClassNotFoundException, IOException {
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(invalidInput);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(invalidInput));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Exception expected");
@@ -65,8 +66,7 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test(dataProvider = "getModuleWithInvalidFileFormatVersion")
   public void testReadFailsForInvalidFileFormatVersion(byte[] invalidInput) throws ClassNotFoundException, IOException {
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(invalidInput);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(invalidInput));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Exception expected");
@@ -90,8 +90,7 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test(dataProvider = "getModuleWithInvalidDroolsRuntimeVersion")
   public void testReadFailsForInvalidDroolsRuntimeVersion(byte[] invalidInput) throws ClassNotFoundException, IOException {
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(invalidInput);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(invalidInput));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Exception expected");
@@ -118,9 +117,8 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test(dataProvider = "getModuleForFileFormatConversionTest")
   public void testReadsFileFormatVersion(byte[] inputBytes, long expectedVersion) throws ClassNotFoundException, IOException {
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(inputBytes);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
-    reader.setSupportedVersions(Collections.singleton(expectedVersion));
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
+    reader.setSupportedVersions(singleton(expectedVersion));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Exception expected");
@@ -154,16 +152,9 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test
   public void testReadsDroolsRuntimeVersion() throws ClassNotFoundException, IOException {
-    final byte[] inputBytes = new byte[] {
-        'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-        // file format version:
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-        // drools runtime version: length = 1; data length = 1
-        0x00, 0x05, '5', '.', '1', '.', '1', 'X'
-    };
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(inputBytes);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
-    reader.setSupportedVersions(Collections.singleton(1l));
+    final byte[] inputBytes = concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x05, '5', '.', '1', '.', '1', 'X'));
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
+    reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Exception expected");
@@ -179,16 +170,9 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test
   public void testRejectsMismatchingDroolsRuntimeVersion() throws ClassNotFoundException, IOException {
-    final byte[] inputBytes = new byte[] {
-        'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-        // file format version:
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-        // drools runtime version: length = 1; data length = 1
-        0x00, 0x06, '5', '.', '1', '.', '1', 'X'
-    };
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(inputBytes);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
-    reader.setSupportedVersions(Collections.singleton(1l));
+    final byte[] inputBytes = concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x06, '5', '.', '1', '.', '1', 'X'));
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
+    reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Expected InvalidDroolsRuntimeVersionException to be thrown, but no exception occurred at all.");
@@ -204,16 +188,9 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test
   public void testRejectsInvalidFileFormatVersion() throws ClassNotFoundException, IOException {
-    final byte[] inputBytes = new byte[] {
-        'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00,
-        // file format version:
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-        // drools runtime version: length = 1; data length = 1
-        0x00, 0x05, '5', '.', '1', '.', '1'
-    };
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(inputBytes);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
-    reader.setSupportedVersions(Collections.singleton(1l));
+    final byte[] inputBytes = concat(VALID_MAGIC, VALID_FILE_FORMAT_2, bytes(0x00, 0x05, '5', '.', '1', '.', '1'));
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
+    reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Exception expected");
@@ -228,9 +205,8 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test(dataProvider = "getModuleWithInvalidMagic")
   public void testRejectsInvalidFileMagic(byte[] invalidData) throws ClassNotFoundException, IOException {
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(invalidData);
-    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(inputStream);
-    reader.setSupportedVersions(Collections.singleton(1l));
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(invalidData));
+    reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
       Fail.fail("Exception expected");
@@ -246,9 +222,9 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleWithInvalidMagic() {
     return new Object[][] {
-        {new byte[] {'D', 'R', 'L', 'K', 'M', 'O', 'D', 0x01, 0, 0, 0, 0, 0, 0, 0, 1, 0, 5, '5', '.', '1', '.', '1'}},
-        {new byte[] {'H', 'E', 'L', 'L', 'O', 'M', 'E', 0x00, 0, 0, 0, 0, 0, 0, 0, 1, 0, 5, '5', '.', '1', '.', '1'}},
-        {new byte[] {'D', 'R', 'L', 'K', 'M', 'O', 'E', 0x00, 0, 0, 0, 0, 0, 0, 0, 1, 0, 5, '5', '.', '1', '.', '1'}},
+        {concat(bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x01), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
+        {concat(bytes('H', 'E', 'L', 'L', 'O', 'M', 'E', 0x00), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
+        {concat(bytes('D', 'R', 'L', 'K', 'M', 'O', 'E', 0x00), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
     };
   }
 
