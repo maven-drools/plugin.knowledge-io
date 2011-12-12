@@ -4,14 +4,23 @@ import de.lightful.maven.plugins.drools.knowledgeio.IllegalFileFormatException;
 import de.lightful.maven.plugins.drools.knowledgeio.InvalidDroolsRuntimeVersionException;
 import de.lightful.maven.plugins.drools.knowledgeio.InvalidFileFormatVersionException;
 import de.lightful.maven.plugins.drools.knowledgeio.InvalidFileMagicException;
+import org.drools.builder.KnowledgeBuilder;
+import org.drools.builder.KnowledgeBuilderFactory;
+import org.drools.builder.ResourceType;
+import org.drools.core.util.DroolsStreamUtils;
+import org.drools.definition.KnowledgePackage;
+import org.drools.definition.rule.Rule;
 import org.drools.definitions.impl.KnowledgePackageImp;
+import org.drools.io.ResourceFactory;
 import org.fest.assertions.Fail;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.util.Collection;
 
 import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.bytes;
 import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.concat;
@@ -28,6 +37,27 @@ public class KnowledgeModuleReaderImplTest {
   public static final byte[] VALID_FILE_FORMAT_2 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
   public static final byte[] DUMMY_DROOLS_VERSION = bytes(0x00, 0x01, 'X');
   public static final byte[] DROOLS_5_1_1 = bytes(0, 5, '5', '.', '1', '.', '1');
+  public static final String EXAMPLE_DROOLS_CODE =
+      "package org.example;\n" +
+      "dialect \"java\"\n" +
+      "\n" +
+      "rule \"one\"\n" +
+      "  when\n" +
+      "  then\n" +
+      "    System.out.println(\"Hello\");\n" +
+      "end\n" +
+      "\n" +
+      "rule \"two\"\n" +
+      "  when\n" +
+      "  then\n" +
+      "    System.out.println(\"Hello\");\n" +
+      "end\n" +
+      "\n" +
+      "rule \"three\"\n" +
+      "  when\n" +
+      "  then\n" +
+      "    System.out.println(\"Hello\");\n" +
+      "end\n";
 
   @Test
   public void testFileFormatTooShort() {
@@ -229,7 +259,20 @@ public class KnowledgeModuleReaderImplTest {
   }
 
   @Test
-  public void testReadsFileContent() {
-    Fail.fail("Unimplemented test: write a test which makes sure that the implementation actually reads the knowledge packages from the input stream.");
+  public void testReadsFileContent() throws IOException, ClassNotFoundException {
+    final KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+    knowledgeBuilder.add(ResourceFactory.newByteArrayResource(EXAMPLE_DROOLS_CODE.getBytes()), ResourceType.DRL);
+    assertThat(knowledgeBuilder.hasErrors()).as("Knowledge Builder's hasErrors Flag").isFalse();
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    DroolsStreamUtils.streamOut(outputStream, knowledgeBuilder.getKnowledgePackages());
+
+    final byte[] input = concat(VALID_MAGIC, VALID_FILE_FORMAT_1, DROOLS_5_1_1, outputStream.toByteArray());
+
+    KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(input));
+    final Collection<KnowledgePackage> actualKnowledgePackages = reader.readKnowledgePackages();
+
+    assertThat(actualKnowledgePackages).hasSize(1);
+    final Collection<Rule> rules = actualKnowledgePackages.iterator().next().getRules();
+    assertThat(rules).hasSize(3);
   }
 }
