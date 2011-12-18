@@ -1,4 +1,4 @@
-package de.lightful.maven.plugins.drools.knowledgeio.impl;
+package de.lightful.maven.plugins.drools.knowledgeio.internal;
 
 public class ArrayUtils {
 

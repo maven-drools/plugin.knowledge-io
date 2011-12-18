@@ -16,8 +16,9 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.lightful.maven.plugins.drools.knowledgeio.impl;
+package de.lightful.maven.plugins.drools.knowledgeio.metadata;
 
+import de.lightful.maven.plugins.drools.knowledgeio.LogStream;
 import org.drools.definition.KnowledgePackage;
 import org.drools.definitions.impl.KnowledgePackageImp;
 import org.drools.factmodel.FieldDefinition;

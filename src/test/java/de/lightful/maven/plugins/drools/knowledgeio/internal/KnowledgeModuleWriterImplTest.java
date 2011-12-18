@@ -1,4 +1,4 @@
-package de.lightful.maven.plugins.drools.knowledgeio.impl;
+package de.lightful.maven.plugins.drools.knowledgeio.internal;
 
 import org.drools.builder.KnowledgeBuilder;
 import org.drools.builder.KnowledgeBuilderFactory;
@@ -6,6 +6,7 @@ import org.drools.builder.ResourceType;
 import org.drools.core.util.DroolsStreamUtils;
 import org.drools.definition.KnowledgePackage;
 import org.drools.io.ResourceFactory;
+import org.fest.assertions.Assertions;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -14,7 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.slice;
 import static org.fest.assertions.Assertions.assertThat;
 
 @Test
@@ -42,14 +42,14 @@ public class KnowledgeModuleWriterImplTest {
   public void testWritesFileMagic() throws IOException {
     writer.writeKnowledgePackages(knowledgePackages);
     final byte[] bytes = outputStream.toByteArray();
-    assertThat(slice(bytes, 0, KnowledgeModule.FILE_MAGIC.length)).isEqualTo(KnowledgeModule.FILE_MAGIC);
+    Assertions.assertThat(ArrayUtils.slice(bytes, 0, KnowledgeModule.FILE_MAGIC.length)).isEqualTo(KnowledgeModule.FILE_MAGIC);
   }
 
   @Test
   public void testWritesFileFormatVersion() throws IOException {
     writer.writeKnowledgePackages(knowledgePackages);
     final byte[] bytes = outputStream.toByteArray();
-    assertThat(slice(bytes, KnowledgeModule.FILE_MAGIC.length, KnowledgeModule.CURRENT_FILE_FORMAT.length)).isEqualTo(KnowledgeModule.CURRENT_FILE_FORMAT);
+    Assertions.assertThat(ArrayUtils.slice(bytes, KnowledgeModule.FILE_MAGIC.length, KnowledgeModule.CURRENT_FILE_FORMAT.length)).isEqualTo(KnowledgeModule.CURRENT_FILE_FORMAT);
   }
 
   @Test
@@ -61,7 +61,7 @@ public class KnowledgeModuleWriterImplTest {
     final ByteBuffer buffer = ByteBuffer.wrap(bytes);
     final int skipSize = KnowledgeModule.FILE_MAGIC.length + KnowledgeModule.CURRENT_FILE_FORMAT.length;
     int runtimeVersionLength = buffer.getShort(skipSize);
-    final byte[] runtimeVersionChars = slice(bytes, skipSize + sizeOfRuntimeVersionLength, runtimeVersionLength);
+    final byte[] runtimeVersionChars = ArrayUtils.slice(bytes, skipSize + sizeOfRuntimeVersionLength, runtimeVersionLength);
     assertThat(new String(runtimeVersionChars, "UTF-8")).isEqualTo(KnowledgePackage.class.getPackage().getImplementationVersion());
   }
 
@@ -76,7 +76,7 @@ public class KnowledgeModuleWriterImplTest {
     final int runtimeVersionLength = buffer.getShort(fixedSkipLength);
     final int totalSkipLength = fixedSkipLength + sizeOfRuntimeVersionLength + runtimeVersionLength;
 
-    final byte[] knowledgePackageData = slice(bytes, totalSkipLength, bytes.length - totalSkipLength);
+    final byte[] knowledgePackageData = ArrayUtils.slice(bytes, totalSkipLength, bytes.length - totalSkipLength);
     final Object knowledgeObject = DroolsStreamUtils.streamIn(knowledgePackageData, true);
     assertThat(knowledgeObject).isInstanceOf(Iterable.class);
     Iterable<?> knowledgeIterable = (Iterable<?>) knowledgeObject;

@@ -1,4 +1,4 @@
-package de.lightful.maven.plugins.drools.knowledgeio.impl;
+package de.lightful.maven.plugins.drools.knowledgeio.internal;
 
 import de.lightful.maven.plugins.drools.knowledgeio.IllegalFileFormatException;
 import de.lightful.maven.plugins.drools.knowledgeio.InvalidDroolsRuntimeVersionException;
@@ -22,21 +22,19 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Collection;
 
-import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.bytes;
-import static de.lightful.maven.plugins.drools.knowledgeio.impl.ArrayUtils.concat;
 import static java.util.Collections.singleton;
 import static org.fest.assertions.Assertions.assertThat;
 
 @Test
 public class KnowledgeModuleReaderImplTest {
 
-  public static final byte[] VALID_MAGIC = bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00);
-  public static final byte[] FILE_FORMAT_TOO_SHORT_7 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
-  public static final byte[] FILE_FORMAT_TOO_SHORT_6 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
-  public static final byte[] VALID_FILE_FORMAT_1 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
-  public static final byte[] VALID_FILE_FORMAT_2 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
-  public static final byte[] DUMMY_DROOLS_VERSION = bytes(0x00, 0x01, 'X');
-  public static final byte[] DROOLS_5_1_1 = bytes(0, 5, '5', '.', '1', '.', '1');
+  public static final byte[] VALID_MAGIC = ArrayUtils.bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00);
+  public static final byte[] FILE_FORMAT_TOO_SHORT_7 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
+  public static final byte[] FILE_FORMAT_TOO_SHORT_6 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
+  public static final byte[] VALID_FILE_FORMAT_1 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
+  public static final byte[] VALID_FILE_FORMAT_2 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
+  public static final byte[] DUMMY_DROOLS_VERSION = ArrayUtils.bytes(0x00, 0x01, 'X');
+  public static final byte[] DROOLS_5_1_1 = ArrayUtils.bytes(0, 5, '5', '.', '1', '.', '1');
 
   @Test
   public void testFileFormatTooShort() {
@@ -62,10 +60,10 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleWithIncompleteMagic() {
     return new Object[][] {
-        {bytes()},
-        {bytes('A', 'B', 'C')},
-        {bytes('D', 'R', 'L')},
-        {bytes('D', 'R', 'L', 'K', 'M', 'O', 'D')},
+        {ArrayUtils.bytes()},
+        {ArrayUtils.bytes('A', 'B', 'C')},
+        {ArrayUtils.bytes('D', 'R', 'L')},
+        {ArrayUtils.bytes('D', 'R', 'L', 'K', 'M', 'O', 'D')},
     };
   }
 
@@ -87,9 +85,9 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleWithInvalidFileFormatVersion() {
     return new Object[][] {
-        {concat(VALID_MAGIC)},
-        {concat(VALID_MAGIC, FILE_FORMAT_TOO_SHORT_6)},
-        {concat(VALID_MAGIC, FILE_FORMAT_TOO_SHORT_7)},
+        {ArrayUtils.concat(VALID_MAGIC)},
+        {ArrayUtils.concat(VALID_MAGIC, FILE_FORMAT_TOO_SHORT_6)},
+        {ArrayUtils.concat(VALID_MAGIC, FILE_FORMAT_TOO_SHORT_7)},
     };
   }
 
@@ -112,11 +110,11 @@ public class KnowledgeModuleReaderImplTest {
   private Object[][] getModuleWithInvalidDroolsRuntimeVersion() {
     return new Object[][] {
         /* no length => invalid */
-        {concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes())},
+        {ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, ArrayUtils.bytes())},
         /* length = 1; data = [] => invalid */
-        {concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x01))},
+        {ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, ArrayUtils.bytes(0x00, 0x01))},
         /* length = 10; data length = 9 => invalid */
-        {concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x0a, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'))},
+        {ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, ArrayUtils.bytes(0x00, 0x0a, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'))},
     };
   }
 
@@ -144,20 +142,20 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleForFileFormatConversionTest() {
     return new Object[][] {
-        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01), DUMMY_DROOLS_VERSION), 1l},
-        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00), DUMMY_DROOLS_VERSION), 256l},
-        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00), DUMMY_DROOLS_VERSION), 65536l},
-        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 16777216l},
-        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 4294967296l},
-        {concat(VALID_MAGIC, bytes(0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 1099511627776l},
-        {concat(VALID_MAGIC, bytes(0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 281474976710656l},
-        {concat(VALID_MAGIC, bytes(0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 72057594037927936l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01), DUMMY_DROOLS_VERSION), 1l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00), DUMMY_DROOLS_VERSION), 256l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00), DUMMY_DROOLS_VERSION), 65536l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 16777216l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 4294967296l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 1099511627776l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 281474976710656l},
+        {ArrayUtils.concat(VALID_MAGIC, ArrayUtils.bytes(0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00), DUMMY_DROOLS_VERSION), 72057594037927936l},
     };
   }
 
   @Test
   public void testReadsDroolsRuntimeVersion() throws ClassNotFoundException, IOException {
-    final byte[] inputBytes = concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x05, '5', '.', '1', '.', '1', 'X'));
+    final byte[] inputBytes = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, ArrayUtils.bytes(0x00, 0x05, '5', '.', '1', '.', '1', 'X'));
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
     reader.setSupportedVersions(singleton(1l));
     try {
@@ -175,7 +173,7 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test
   public void testRejectsMismatchingDroolsRuntimeVersion() throws ClassNotFoundException, IOException {
-    final byte[] inputBytes = concat(VALID_MAGIC, VALID_FILE_FORMAT_1, bytes(0x00, 0x06, '5', '.', '1', '.', '1', 'X'));
+    final byte[] inputBytes = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, ArrayUtils.bytes(0x00, 0x06, '5', '.', '1', '.', '1', 'X'));
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
     reader.setSupportedVersions(singleton(1l));
     try {
@@ -193,7 +191,7 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test
   public void testRejectsInvalidFileFormatVersion() throws ClassNotFoundException, IOException {
-    final byte[] inputBytes = concat(VALID_MAGIC, VALID_FILE_FORMAT_2, bytes(0x00, 0x05, '5', '.', '1', '.', '1'));
+    final byte[] inputBytes = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_2, ArrayUtils.bytes(0x00, 0x05, '5', '.', '1', '.', '1'));
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
     reader.setSupportedVersions(singleton(1l));
     try {
@@ -227,9 +225,9 @@ public class KnowledgeModuleReaderImplTest {
   @DataProvider
   private Object[][] getModuleWithInvalidMagic() {
     return new Object[][] {
-        {concat(bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x01), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
-        {concat(bytes('H', 'E', 'L', 'L', 'O', 'M', 'E', 0x00), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
-        {concat(bytes('D', 'R', 'L', 'K', 'M', 'O', 'E', 0x00), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
+        {ArrayUtils.concat(ArrayUtils.bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x01), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
+        {ArrayUtils.concat(ArrayUtils.bytes('H', 'E', 'L', 'L', 'O', 'M', 'E', 0x00), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
+        {ArrayUtils.concat(ArrayUtils.bytes('D', 'R', 'L', 'K', 'M', 'O', 'E', 0x00), VALID_FILE_FORMAT_1, DROOLS_5_1_1)},
     };
   }
 
@@ -241,7 +239,7 @@ public class KnowledgeModuleReaderImplTest {
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     DroolsStreamUtils.streamOut(outputStream, knowledgeBuilder.getKnowledgePackages(), true);
 
-    final byte[] input = concat(VALID_MAGIC, VALID_FILE_FORMAT_1, DROOLS_5_1_1, outputStream.toByteArray());
+    final byte[] input = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, DROOLS_5_1_1, outputStream.toByteArray());
 
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(input));
     final Collection<KnowledgePackage> actualKnowledgePackages = reader.readKnowledgePackages();
