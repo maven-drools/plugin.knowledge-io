@@ -239,7 +239,7 @@ public class KnowledgeModuleReaderImplTest {
     knowledgeBuilder.add(ResourceFactory.newByteArrayResource(ExampleDroolsCode.THREE_SIMPLE_RULES.getBytes()), ResourceType.DRL);
     assertThat(knowledgeBuilder.hasErrors()).as("Knowledge Builder's hasErrors Flag").isFalse();
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    DroolsStreamUtils.streamOut(outputStream, knowledgeBuilder.getKnowledgePackages());
+    DroolsStreamUtils.streamOut(outputStream, knowledgeBuilder.getKnowledgePackages(), true);
 
     final byte[] input = concat(VALID_MAGIC, VALID_FILE_FORMAT_1, DROOLS_5_1_1, outputStream.toByteArray());
 
