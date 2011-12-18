@@ -138,7 +138,7 @@ public class KnowledgeModuleReaderImpl implements KnowledgeModuleReader {
   }
 
   private Collection<KnowledgePackage> readContent() throws IOException, ClassNotFoundException {
-    Object streamedInObject = DroolsStreamUtils.streamIn(inputStream, classLoader);
+    Object streamedInObject = DroolsStreamUtils.streamIn(inputStream, classLoader, true);
     assertThat(streamedInObject).as("object read from stream").isNotNull().isInstanceOf(Collection.class);
 
     Collection loadedObjects = Collection.class.cast(streamedInObject);

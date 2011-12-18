@@ -37,35 +37,10 @@ public class KnowledgeModuleReaderImplTest {
   public static final byte[] VALID_FILE_FORMAT_2 = bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
   public static final byte[] DUMMY_DROOLS_VERSION = bytes(0x00, 0x01, 'X');
   public static final byte[] DROOLS_5_1_1 = bytes(0, 5, '5', '.', '1', '.', '1');
-  public static final String EXAMPLE_DROOLS_CODE =
-      "package org.example;\n" +
-      "dialect \"java\"\n" +
-      "\n" +
-      "rule \"one\"\n" +
-      "  when\n" +
-      "  then\n" +
-      "    System.out.println(\"Hello\");\n" +
-      "end\n" +
-      "\n" +
-      "rule \"two\"\n" +
-      "  when\n" +
-      "  then\n" +
-      "    System.out.println(\"Hello\");\n" +
-      "end\n" +
-      "\n" +
-      "rule \"three\"\n" +
-      "  when\n" +
-      "  then\n" +
-      "    System.out.println(\"Hello\");\n" +
-      "end\n";
 
   @Test
   public void testFileFormatTooShort() {
     assertThat(FILE_FORMAT_TOO_SHORT_6.length).isEqualTo(6);
-  }
-
-  @Test
-  public void testFileFormatNotSupported() {
     assertThat(FILE_FORMAT_TOO_SHORT_7.length).isEqualTo(7);
   }
 
@@ -261,7 +236,7 @@ public class KnowledgeModuleReaderImplTest {
   @Test
   public void testReadsFileContent() throws IOException, ClassNotFoundException {
     final KnowledgeBuilder knowledgeBuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
-    knowledgeBuilder.add(ResourceFactory.newByteArrayResource(EXAMPLE_DROOLS_CODE.getBytes()), ResourceType.DRL);
+    knowledgeBuilder.add(ResourceFactory.newByteArrayResource(ExampleDroolsCode.THREE_SIMPLE_RULES.getBytes()), ResourceType.DRL);
     assertThat(knowledgeBuilder.hasErrors()).as("Knowledge Builder's hasErrors Flag").isFalse();
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     DroolsStreamUtils.streamOut(outputStream, knowledgeBuilder.getKnowledgePackages());

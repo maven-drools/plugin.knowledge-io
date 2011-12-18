@@ -25,4 +25,10 @@ public class ArrayUtils {
     }
     return result;
   }
+
+  public static byte[] slice(byte[] source, int offset, int length) {
+    byte[] result = new byte[length];
+    System.arraycopy(source, offset, result, 0, length);
+    return result;
+  }
 }
