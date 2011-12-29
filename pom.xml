@@ -2,7 +2,7 @@
 <!--
   ~ Copyright (c) 2009-2011 Ansgar Konermann
   ~
-  ~ This file is part of the Maven 3 Drools Plugin.
+  ~ This file is part of the "Maven 3 Drools Support" Package.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -16,13 +16,14 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>de.lightful.poms</groupId>
     <artifactId>java-library</artifactId>
-    <version>7</version>
+    <version>8</version>
   </parent>
 
   <groupId>de.lightful.maven.drools</groupId>
@@ -31,8 +32,15 @@
 
   <name>Maven Drools Support :: Plugin :: Knowledge I/O Library</name>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
   <properties>
-    <!--<drools.runtime.version>[5.2.0.Final]</drools.runtime.version>-->
     <drools.runtime.version>[5.1.1]</drools.runtime.version>
   </properties>
 
@@ -57,7 +65,6 @@
     <dependency>
       <groupId>org.drools</groupId>
       <artifactId>drools-api</artifactId>
-      <!--<artifactId>knowledge-api</artifactId>-->
       <version>${drools.runtime.version}</version>
       <scope>provided</scope>
     </dependency>
