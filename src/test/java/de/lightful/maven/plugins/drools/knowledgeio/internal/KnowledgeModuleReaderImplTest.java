@@ -30,7 +30,6 @@ import org.drools.definition.KnowledgePackage;
 import org.drools.definition.rule.Rule;
 import org.drools.definitions.impl.KnowledgePackageImp;
 import org.drools.io.ResourceFactory;
-import org.fest.assertions.Fail;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -42,6 +41,7 @@ import java.util.Collection;
 
 import static java.util.Collections.singleton;
 import static org.fest.assertions.Assertions.assertThat;
+import static org.testng.Assert.fail;
 
 @Test
 public class KnowledgeModuleReaderImplTest {
@@ -53,6 +53,7 @@ public class KnowledgeModuleReaderImplTest {
   public static final byte[] VALID_FILE_FORMAT_2 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
   public static final byte[] DUMMY_DROOLS_VERSION = ArrayUtils.bytes(0x00, 0x01, 'X');
   public static final byte[] DROOLS_5_1_1 = ArrayUtils.bytes(0, 5, '5', '.', '1', '.', '1');
+  public static final byte[] DROOLS_5_2_0_FINAL = ArrayUtils.bytes(0, 11, '5', '.', '2', '.', '0', '.', 'F', 'i', 'n', 'a', 'l');
 
   @Test
   public void testFileFormatTooShort() {
@@ -65,13 +66,13 @@ public class KnowledgeModuleReaderImplTest {
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(invalidInput));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Exception expected");
+      fail("Exception expected");
     }
     catch (IllegalFileFormatException e) {
       assertThat(e.getMessage()).contains("Cannot read file magic from input stream");
     }
     catch (Exception e) {
-      Fail.fail("Expected IllegalFileFormatException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected IllegalFileFormatException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -90,13 +91,13 @@ public class KnowledgeModuleReaderImplTest {
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(invalidInput));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Exception expected");
+      fail("Exception expected");
     }
     catch (IllegalFileFormatException e) {
       assertThat(e.getMessage()).contains("Cannot read file format version from input stream");
     }
     catch (Exception e) {
-      Fail.fail("Expected IllegalFileFormatException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected IllegalFileFormatException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -114,13 +115,13 @@ public class KnowledgeModuleReaderImplTest {
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(invalidInput));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Exception expected");
+      fail("Exception expected");
     }
     catch (IllegalFileFormatException e) {
       assertThat(e.getMessage()).contains("Cannot read drools version from input stream;");
     }
     catch (Exception e) {
-      Fail.fail("Expected IllegalFileFormatException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected IllegalFileFormatException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -142,13 +143,13 @@ public class KnowledgeModuleReaderImplTest {
     reader.setSupportedVersions(singleton(expectedVersion));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Exception expected");
+      fail("Exception expected");
     }
     catch (InvalidDroolsRuntimeVersionException e) {
       assertVersionIsConvertedCorrectly(expectedVersion, reader.getFileHeader());
     }
     catch (Exception e) {
-      Fail.fail("Expected InvalidDroolsRuntimeVersionException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected InvalidDroolsRuntimeVersionException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -173,19 +174,19 @@ public class KnowledgeModuleReaderImplTest {
 
   @Test
   public void testReadsDroolsRuntimeVersion() throws ClassNotFoundException, IOException {
-    final byte[] inputBytes = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, ArrayUtils.bytes(0x00, 0x05, '5', '.', '1', '.', '1', 'X'));
+    final byte[] inputBytes = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, ArrayUtils.bytes(0, 11, '5', '.', '2', '.', '0', '.', 'F', 'i', 'n', 'a', 'l', 'X'));
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(inputBytes));
     reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Exception expected");
+      fail("Exception expected");
     }
     catch (EOFException e) {
       final DroolsKnowledgeModuleHeader fileHeader = reader.getFileHeader();
       assertThat(fileHeader.droolsRuntimeVersion).isEqualTo(KnowledgePackageImp.class.getPackage().getImplementationVersion());
     }
     catch (Exception e) {
-      Fail.fail("Expected EOFException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected EOFException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -196,14 +197,14 @@ public class KnowledgeModuleReaderImplTest {
     reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Expected InvalidDroolsRuntimeVersionException to be thrown, but no exception occurred at all.");
+      fail("Expected InvalidDroolsRuntimeVersionException to be thrown, but no exception occurred at all.");
     }
     catch (InvalidDroolsRuntimeVersionException e) {
       assertThat(e.getMessage()).contains("5.1.1X");
       // caught by intention: this test expects InvalidDroolsRuntimeVersionException to be thrown
     }
     catch (Exception e) {
-      Fail.fail("Expected InvalidDroolsRuntimeVersionException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected InvalidDroolsRuntimeVersionException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -214,13 +215,13 @@ public class KnowledgeModuleReaderImplTest {
     reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Exception expected");
+      fail("Exception expected");
     }
     catch (InvalidFileFormatVersionException e) {
       assertThat(e.getMessage()).contains("format: 2");
     }
     catch (Exception e) {
-      Fail.fail("Expected InvalidFileFormatVersionException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected InvalidFileFormatVersionException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -230,13 +231,13 @@ public class KnowledgeModuleReaderImplTest {
     reader.setSupportedVersions(singleton(1l));
     try {
       reader.readKnowledgePackages();
-      Fail.fail("Exception expected");
+      fail("Exception expected");
     }
     catch (InvalidFileMagicException e) {
       assertThat(e.getMessage().contains(new String(invalidData)));
     }
     catch (Exception e) {
-      Fail.fail("Expected InvalidFileMagicException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
+      fail("Expected InvalidFileMagicException to be thrown, but actual exception was " + e.getClass().getSimpleName() + ".", e);
     }
   }
 
@@ -257,7 +258,7 @@ public class KnowledgeModuleReaderImplTest {
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     DroolsStreamUtils.streamOut(outputStream, knowledgeBuilder.getKnowledgePackages(), true);
 
-    final byte[] input = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, DROOLS_5_1_1, outputStream.toByteArray());
+    final byte[] input = ArrayUtils.concat(VALID_MAGIC, VALID_FILE_FORMAT_1, DROOLS_5_2_0_FINAL, outputStream.toByteArray());
 
     KnowledgeModuleReaderImpl reader = new KnowledgeModuleReaderImpl(new ByteArrayInputStream(input));
     final Collection<KnowledgePackage> actualKnowledgePackages = reader.readKnowledgePackages();
