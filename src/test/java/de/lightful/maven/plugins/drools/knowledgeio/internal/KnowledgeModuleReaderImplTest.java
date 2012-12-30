@@ -39,21 +39,13 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.util.Collection;
 
+import static de.lightful.maven.plugins.drools.knowledgeio.internal.KnowledgeModuleReaderImplTestData.*;
 import static java.util.Collections.singleton;
 import static org.fest.assertions.Assertions.assertThat;
 import static org.testng.Assert.fail;
 
 @Test
 public class KnowledgeModuleReaderImplTest {
-
-  public static final byte[] VALID_MAGIC = ArrayUtils.bytes('D', 'R', 'L', 'K', 'M', 'O', 'D', 0x00);
-  public static final byte[] FILE_FORMAT_TOO_SHORT_7 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
-  public static final byte[] FILE_FORMAT_TOO_SHORT_6 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
-  public static final byte[] VALID_FILE_FORMAT_1 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
-  public static final byte[] VALID_FILE_FORMAT_2 = ArrayUtils.bytes(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02);
-  public static final byte[] DUMMY_DROOLS_VERSION = ArrayUtils.bytes(0x00, 0x01, 'X');
-  public static final byte[] DROOLS_5_1_1 = ArrayUtils.bytes(0, 5, '5', '.', '1', '.', '1');
-  public static final byte[] DROOLS_5_2_0_FINAL = ArrayUtils.bytes(0, 11, '5', '.', '2', '.', '0', '.', 'F', 'i', 'n', 'a', 'l');
 
   @Test
   public void testFileFormatTooShort() {

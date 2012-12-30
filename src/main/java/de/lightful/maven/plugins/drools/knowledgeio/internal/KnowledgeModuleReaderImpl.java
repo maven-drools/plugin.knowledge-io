@@ -48,11 +48,15 @@ public class KnowledgeModuleReaderImpl implements KnowledgeModuleReader {
   }
 
   public Collection<KnowledgePackage> readKnowledgePackages() throws IOException, ClassNotFoundException {
+    return readKnowledgePackages(VersionCheckStrategy.VERSIONS_MUST_MATCH);
+  }
+
+  public Collection<KnowledgePackage> readKnowledgePackages(VersionCheckStrategy versionCheckStrategy) throws IOException, ClassNotFoundException {
     if (this.header == null) {
       this.header = readHeader();
     }
     ensureHeaderIsValid(header);
-    ensureDroolsRuntimeMatches(header.droolsRuntimeVersion);
+    ensureDroolsRuntimeMatches(header.droolsRuntimeVersion, versionCheckStrategy);
     return readContent();
   }
 
@@ -64,15 +68,33 @@ public class KnowledgeModuleReaderImpl implements KnowledgeModuleReader {
     this.supportedVersions = supportedVersions;
   }
 
-  private void ensureDroolsRuntimeMatches(String expectedRuntimeVersion) {
+  private void ensureDroolsRuntimeMatches(String expectedRuntimeVersion, VersionCheckStrategy versionCheckStrategy) {
     final Package droolsCorePackage = KnowledgePackageImp.class.getPackage();
     final String implementationTitle = droolsCorePackage.getImplementationTitle();
     final String implementationVersion = droolsCorePackage.getImplementationVersion();
-    if (!implementationVersion.equals(expectedRuntimeVersion)) {
+    switch (versionCheckStrategy) {
+      case VERSIONS_MUST_MATCH:
+        ensureVersionsMatch(expectedRuntimeVersion, implementationTitle, implementationVersion);
+        break;
+      case IGNORE_UNKNOWN_RUNTIME_VERSION:
+        ensureVersionsMatchIgnoringUnknown(expectedRuntimeVersion, implementationTitle, implementationVersion);
+        break;
+    }
+  }
+
+  private void ensureVersionsMatchIgnoringUnknown(String expectedRuntimeVersion, String implementationTitle, String implementationVersion) {
+    if (implementationVersion == null || "".equals(implementationVersion)) {
+      return;
+    }
+    ensureVersionsMatch(expectedRuntimeVersion, implementationTitle, implementationVersion);
+  }
+
+  private void ensureVersionsMatch(String expectedRuntimeVersion, String implementationTitle, String implementationVersion) {
+    if (!expectedRuntimeVersion.equals(implementationVersion)) {
       throw new InvalidDroolsRuntimeVersionException(
           "Drools runtime versions must match: you're trying to load a Drools Knowledge Module compiled " +
-          "for Drools " + expectedRuntimeVersion + ", but there's '" + implementationTitle + "' version " +
-          implementationVersion + " on the classpath.");
+          "for Drools " + expectedRuntimeVersion + ", but there's implementation '" + implementationTitle +
+          "' version '" + implementationVersion + "' on the classpath.");
     }
   }
 

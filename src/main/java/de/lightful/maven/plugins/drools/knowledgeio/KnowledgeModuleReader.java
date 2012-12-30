@@ -25,5 +25,13 @@ import java.util.Collection;
 
 public interface KnowledgeModuleReader {
 
+  /**
+   * @since 0.3.0
+   */
   Collection<KnowledgePackage> readKnowledgePackages() throws IOException, ClassNotFoundException;
+
+  /**
+   * @since 0.3.1
+   */
+  Collection<KnowledgePackage> readKnowledgePackages(VersionCheckStrategy versionCheckStrategy) throws IOException, ClassNotFoundException;
 }
