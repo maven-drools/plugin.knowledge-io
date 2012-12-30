@@ -27,7 +27,7 @@
 
   <groupId>de.lightful.maven.drools</groupId>
   <artifactId>knowledge-io</artifactId>
-  <version>0.3.1</version>
+  <version>0.3.2-SNAPSHOT</version>
 
   <name>Maven Drools Support :: Plugin :: Knowledge I/O Library</name>
 
